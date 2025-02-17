@@ -1,9 +1,19 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "calcutils.h"
 
+void test() {
+    operationList* elements = getElements("12+21+31");
+
+    if (!elements) {
+        printf("err : elements");
+        return;
+    }
+
+    printf("%d", elements->size);
+    freeOperationList(elements);
+}
+
 int main() {
+    /*
     printf("User input : ");
     char* ee = userInput();
 
@@ -22,5 +32,9 @@ int main() {
     printf("%d", elements->size);
     free(ee);
     freeOperationList(elements);
+    */
+
+    test();
+
     return 0;
 }

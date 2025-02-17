@@ -3,7 +3,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "oputils.h"
 
@@ -53,7 +52,6 @@ operationList* getElements(char* input) {
         if (input[i] == '+' || input[i] == '-' || input[i] == '*' ||
             input[i] == '/') {
             opPositions[opIndex++] = i;
-            printf("op à %d\n", opPositions[opIndex - 1]);
         }
     }
 
@@ -61,59 +59,118 @@ operationList* getElements(char* input) {
 
     int lastOpChecked = 0;
 
+    char* numberStr = malloc(sizeof(char));
+    if (!numberStr) {
+        free(opPositions);
+        freeOperationList(output);
+        return NULL;
+    }
+
+    operation tempop = {NAN, '\0', NAN, false};
+
+    int* opPosToUse = malloc(sizeof(int) * (numberOfOp + 1));
+    if (!opPosToUse)
+        return NULL;
+    printf("\nDébut allocation opPosToUse pour %d opérations\n",
+           numberOfOp + 1);
+
+    for (int i = 0; i <= numberOfOp; i++) {
+        printf("\n--- Itération %d ---\n", i);
+        printf("opIndex actuel: %d\n", opIndex);
+
+        int j = (i == 0 || i == 1) ? 1 : i;
+
+        if (i >= opIndex) {
+            opPosToUse[j] = opIndex - 1;
+            printf("i >= opIndex: opPosToUse[%d] = %d\n", i, opIndex);
+        } else {
+            opPosToUse[j] = i;
+            printf("i < opIndex: opPosToUse[%d] = %d\n", i, i);
+        }
+
+        printf("Valeur stockée dans opPosToUse[%d] = %d\n", i, opPosToUse[i]);
+
+        // Vérification des bornes
+        if (opPosToUse[i] < 0 || opPosToUse[i] >= numberOfOp) {
+            printf("ERREUR: Tentative d'accès invalide à opPositions[%d]\n",
+                   opPosToUse[i]);
+            printf("numberOfOp = %d, index demandé = %d\n", numberOfOp,
+                   opPosToUse[i]);
+            // Ici vous pourriez gérer l'erreur
+        } else {
+            printf("Accès valide à opPositions[%d] = %d\n", opPosToUse[i],
+                   opPositions[opPosToUse[i]]);
+        }
+    }
+    printf("\nFin de l'initialisation de opPosToUse\n");
+
     int j = 0;
 
     for (int i = 0; i <= numberOfOp; i++) {
-        operation tempop = {NAN, '\0', NAN, false};
+        printf("\n--- Début itération %d ---\n", i);
+        if (!tempop.secNum) {
+            operation tempop = {NAN, '\0', NAN, false};
+            printf("Réinitialisation de tempop\n");
+        }
 
-        if (tempop.useFirstNumber || lastOpChecked == 0) {
-            int j = 0;
+        if (i == 0) {
+            j = 0;
+            printf("Premier nombre: j initialisé à %d\n", j);
         } else {
-            int j = opPositions[i + 1];
+            j = opPosToUse[i];
+            printf("Nombre suivant: j initialisé à %d\n", j);
         }
 
-        char* numberStr = malloc(sizeof(char));
-        if (!numberStr) {
-            free(opPositions);
-            freeOperationList(output);
-            return NULL;
-        }
-
-        // Déclarer d'abord la taille
         int size =
             (j > 0) ? opPositions[j] - opPositions[j - 1] : opPositions[j];
-        numberStr = realloc(numberStr, sizeof(char) * size + 1);
+        printf("Taille calculée pour le nombre: %d\n", size);
+
+        numberStr = realloc(numberStr, sizeof(char) * (size + 1));
+        printf("Réallocation de numberStr pour %d caractères\n", size + 1);
+
         if (!numberStr) {
+            printf("ERREUR: Échec de l'allocation mémoire\n");
             free(opPositions);
             freeOperationList(output);
             return NULL;
         }
-        // Définir la position de début
-        int startPos = (j > 0) ? opPositions[j - 1] : 0;
+        int startPos = (j > 0) ? opPositions[j] : 0;
+        printf("Extraction du nombre à partir de %s\n", &input[startPos]);
 
-        // Copier la sous-chaîne
         strncpy(numberStr, &input[startPos], size);
-        numberStr[size] = '\0';  // Assurer la terminaison
+        numberStr[size] = '\0';
+        printf("Nombre extrait (taille %d): %s\n", size, numberStr);
 
-        if (tempop.useFirstNumber || lastOpChecked == 0) {
+        if (lastOpChecked == 0) {
             if (isnan(tempop.firstNum)) {
                 tempop.firstNum = atof(numberStr);
+                printf("Attribution du premier nombre: %f\n", tempop.firstNum);
             } else {
                 tempop.secNum = atof(numberStr);
+                printf("Attribution du second nombre: %f\n", tempop.secNum);
+                lastOpChecked++;
             }
             tempop.useFirstNumber = true;
         } else {
             tempop.secNum = atof(numberStr);
+            printf("Attribution du second nombre: %f\n", tempop.secNum);
+            lastOpChecked++;
         }
-        lastOpChecked++;
-        printf("firstnum est %f\n", tempop.firstNum);
-        printf("secnum est %f\n", tempop.secNum);
-        if (addOperation(output, tempop) != 0) {
-            freeOperationList(output);
-            return NULL;
+        printf("lastOpChecked incrémenté à %d\n", lastOpChecked);
+        printf("État de tempop - firstNum: %f, secNum: %f\n", tempop.firstNum,
+               tempop.secNum);
+
+        if (!tempop.useFirstNumber) {
+            if (addOperation(output, tempop) != 0) {
+                freeOperationList(output);
+                return NULL;
+            }
+            printf("Opération ajoutée avec succès\n");
         }
-        free(numberStr);
+
+        printf("--- Fin itération %d ---\n", i);
     }
+    free(numberStr);
 
     return output;
 }
