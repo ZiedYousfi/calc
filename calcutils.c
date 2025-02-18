@@ -1,10 +1,19 @@
 #include "calcutils.h"
 
-#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "oputils.h"
+
+void removeChar(char* str, char toRemove) {
+    char *src, *dst;
+    for (src = dst = str; *src != '\0'; src++) {
+        if (*src != toRemove) {
+            *dst = *src;
+            dst++;
+        }
+    }
+    *dst = '\0';
+}
 
 char* userInput() {
     int inputSize = 1;
@@ -69,61 +78,20 @@ operationList* getElements(char* input) {
 
     operation tempop = {NAN, '\0', NAN, false};
 
-    int opPosToUseSize = numberOfOp * 3;
-
-    int* opPosToUse = malloc(sizeof(int) * opPosToUseSize);
-    if (!opPosToUse)
-        return NULL;
-    printf("\nDébut allocation opPosToUse pour %d opérations\n",
-           opPosToUseSize);
-
-    for (int i = 0; i < opPosToUseSize - (numberOfOp % opPosToUseSize) + 1;
-         i++) {
-        printf("\n--- Itération %d ---\n", i);
-        printf("opIndex actuel: %d\n", opIndex);
-
-        int j = i + 1;
-
-        if (i >= opIndex) {
-            opPosToUse[j] = opIndex - 1;
-            printf("i >= opIndex: opPosToUse[%d] = %d\n", j, opIndex);
-        } else {
-            opPosToUse[j] = i;
-            printf("i < opIndex: opPosToUse[%d] = %d\n", j, i);
-        }
-
-        printf("Valeur stockée dans opPosToUse[%d] = %d\n", j, opPosToUse[j]);
-
-        // Vérification des bornes
-        if (opPosToUse[j] < 0 || opPosToUse[j] > numberOfOp) {
-            printf("ERREUR: Tentative d'accès invalide à opPositions[%d]\n",
-                   opPosToUse[j]);
-            printf("numberOfOp = %d, index demandé = %d\n", numberOfOp,
-                   opPosToUse[j]);
-            // Ici vous pourriez gérer l'erreur
-        } else {
-            printf("Accès valide à opPositions[%d] = %d\n", opPosToUse[j],
-                   opPositions[opPosToUse[j]]);
-        }
-    }
-    printf("\nFin de l'initialisation de opPosToUse\n");
-
     int j = 0;
 
     for (int i = 0; i <= numberOfOp; i++) {
         printf("\n--- Début itération %d ---\n", i);
-        if (!tempop.secNum) {
-            operation tempop = {NAN, '\0', NAN, false};
+        if (!isnan(tempop.secNum)) {
+            tempop = (operation){NAN, '\0', NAN, false};
             printf("Réinitialisation de tempop\n");
         }
 
+        j = (i > 1) ? i - 1 : 0;
+        printf("Nombre suivant: j initialisé à %d\n", j);
 
-            j = (i > 0) ? opPosToUse[i] : opPosToUse[i - 1];
-            printf("Nombre suivant: j initialisé à %d\n", j);
-
-
-        int size =
-            (i > 0) ? opPositions[j + 1] - opPositions[j] : opPositions[j + 1];
+        int size = (i > 1) ? opPositions[j] - opPositions[j - 1]
+                           : (opPositions[j]) + 1;
         printf("Taille calculée pour le nombre: %d\n", size);
 
         numberStr = realloc(numberStr, sizeof(char) * (size + 1));
@@ -143,6 +111,20 @@ operationList* getElements(char* input) {
         numberStr[size] = '\0';
         printf("Nombre extrait (taille %d): %s\n", size, numberStr);
 
+        if (i < numberOfOp) {
+            char opStr[2] = {input[opPositions[i]], '\0'};
+
+            int opPos = getOp(opStr);
+
+            if (opPos >= 0) {
+                tempop.op = ops[opPos].opRep[0];
+            } else {
+                printf("Erreur: Opérateur non reconnu\n");
+            }
+        }
+
+        removeChar(numberStr, tempop.op);
+
         if (lastOpChecked == 0) {
             if (isnan(tempop.firstNum)) {
                 tempop.firstNum = atof(numberStr);
@@ -159,8 +141,8 @@ operationList* getElements(char* input) {
             lastOpChecked++;
         }
         printf("lastOpChecked incrémenté à %d\n", lastOpChecked);
-        printf("État de tempop - firstNum: %f, secNum: %f\n", tempop.firstNum,
-               tempop.secNum);
+        printf("État de tempop - firstNum: %f, op : %c, secNum: %f\n",
+               tempop.firstNum, tempop.op, tempop.secNum);
 
         if (!tempop.useFirstNumber) {
             if (addOperation(output, tempop) != 0) {
@@ -172,6 +154,7 @@ operationList* getElements(char* input) {
 
         printf("--- Fin itération %d ---\n", i);
     }
+
     free(numberStr);
 
     return output;

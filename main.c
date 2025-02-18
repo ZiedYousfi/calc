@@ -13,7 +13,7 @@ void test() {
 }
 
 int main() {
-    /*
+    setbuf(stdout, NULL);
     printf("User input : ");
     char* ee = userInput();
 
@@ -32,9 +32,6 @@ int main() {
     printf("%d", elements->size);
     free(ee);
     freeOperationList(elements);
-    */
-
-    test();
 
     return 0;
 }

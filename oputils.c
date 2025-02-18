@@ -1,7 +1,5 @@
 #include "oputils.h"
 
-#include <string.h>
-
 operationList* createOperationList() {
     operationList* list = malloc(sizeof(operationList));
     if (!list)
@@ -33,4 +31,21 @@ void freeOperationList(operationList* list) {
     free(list->operations);
     free(list);
     return;
+}
+
+const operators ops[] = {
+    {"add", "+"}, {"subtract", "-"}, {"multiply", "*"}, {"divide", "/"}};
+
+int getOp(char* input) {
+    int numOps = sizeof(ops) / sizeof(operators);
+
+    for (int i = 0; i < numOps; i++) {
+        if (strcmp(input, ops[i].opRep) == 0) {
+            return i;
+        }
+    }
+
+    printf("Aucun opérateur correspondant trouvé\n");
+    printf("=== Fin getOp ===\n");
+    return -1;
 }

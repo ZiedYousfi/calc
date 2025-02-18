@@ -20,8 +20,17 @@ typedef struct {
     int capacity;
 } operationList;
 
+typedef struct {
+    char* name;
+    char* opRep;
+} operators;
+
+extern const operators ops[];
+
 operationList* createOperationList();
 int addOperation(operationList* list, operation op);
 void freeOperationList(operationList* list);
+
+int getOp(char* input);
 
 #endif
