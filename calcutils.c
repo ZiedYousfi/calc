@@ -52,6 +52,7 @@ operationList* getElements(char* input) {
         if (input[i] == '+' || input[i] == '-' || input[i] == '*' ||
             input[i] == '/') {
             opPositions[opIndex++] = i;
+            printf("opPos %d : %d\n", opIndex - 1, opPositions[opIndex - 1]);
         }
     }
 
@@ -68,38 +69,41 @@ operationList* getElements(char* input) {
 
     operation tempop = {NAN, '\0', NAN, false};
 
-    int* opPosToUse = malloc(sizeof(int) * (numberOfOp + 1));
+    int opPosToUseSize = numberOfOp * 3;
+
+    int* opPosToUse = malloc(sizeof(int) * opPosToUseSize);
     if (!opPosToUse)
         return NULL;
     printf("\nDébut allocation opPosToUse pour %d opérations\n",
-           numberOfOp + 1);
+           opPosToUseSize);
 
-    for (int i = 0; i <= numberOfOp; i++) {
+    for (int i = 0; i < opPosToUseSize - (numberOfOp % opPosToUseSize) + 1;
+         i++) {
         printf("\n--- Itération %d ---\n", i);
         printf("opIndex actuel: %d\n", opIndex);
 
-        int j = (i == 0 || i == 1) ? 1 : i;
+        int j = i + 1;
 
         if (i >= opIndex) {
             opPosToUse[j] = opIndex - 1;
-            printf("i >= opIndex: opPosToUse[%d] = %d\n", i, opIndex);
+            printf("i >= opIndex: opPosToUse[%d] = %d\n", j, opIndex);
         } else {
             opPosToUse[j] = i;
-            printf("i < opIndex: opPosToUse[%d] = %d\n", i, i);
+            printf("i < opIndex: opPosToUse[%d] = %d\n", j, i);
         }
 
-        printf("Valeur stockée dans opPosToUse[%d] = %d\n", i, opPosToUse[i]);
+        printf("Valeur stockée dans opPosToUse[%d] = %d\n", j, opPosToUse[j]);
 
         // Vérification des bornes
-        if (opPosToUse[i] < 0 || opPosToUse[i] >= numberOfOp) {
+        if (opPosToUse[j] < 0 || opPosToUse[j] > numberOfOp) {
             printf("ERREUR: Tentative d'accès invalide à opPositions[%d]\n",
-                   opPosToUse[i]);
+                   opPosToUse[j]);
             printf("numberOfOp = %d, index demandé = %d\n", numberOfOp,
-                   opPosToUse[i]);
+                   opPosToUse[j]);
             // Ici vous pourriez gérer l'erreur
         } else {
-            printf("Accès valide à opPositions[%d] = %d\n", opPosToUse[i],
-                   opPositions[opPosToUse[i]]);
+            printf("Accès valide à opPositions[%d] = %d\n", opPosToUse[j],
+                   opPositions[opPosToUse[j]]);
         }
     }
     printf("\nFin de l'initialisation de opPosToUse\n");
@@ -113,16 +117,13 @@ operationList* getElements(char* input) {
             printf("Réinitialisation de tempop\n");
         }
 
-        if (i == 0) {
-            j = 0;
-            printf("Premier nombre: j initialisé à %d\n", j);
-        } else {
-            j = opPosToUse[i];
+
+            j = (i > 0) ? opPosToUse[i] : opPosToUse[i - 1];
             printf("Nombre suivant: j initialisé à %d\n", j);
-        }
+
 
         int size =
-            (j > 0) ? opPositions[j] - opPositions[j - 1] : opPositions[j];
+            (i > 0) ? opPositions[j + 1] - opPositions[j] : opPositions[j + 1];
         printf("Taille calculée pour le nombre: %d\n", size);
 
         numberStr = realloc(numberStr, sizeof(char) * (size + 1));
@@ -134,8 +135,9 @@ operationList* getElements(char* input) {
             freeOperationList(output);
             return NULL;
         }
-        int startPos = (j > 0) ? opPositions[j] : 0;
-        printf("Extraction du nombre à partir de %s\n", &input[startPos]);
+        int startPos = (i > 0) ? opPositions[j] : 0;
+        printf("Extraction du nombre à partir de %s pour startPos : %d\n",
+               &input[startPos], startPos);
 
         strncpy(numberStr, &input[startPos], size);
         numberStr[size] = '\0';
