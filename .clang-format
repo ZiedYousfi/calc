@@ -1,4 +1,4 @@
-Language: Cpp
+Language: C
 BasedOnStyle: Google
 IndentWidth: 4
 ColumnLimit: 80
@@ -11,5 +11,12 @@ SpaceBeforeParens: ControlStatements
 SpaceInEmptyParentheses: false
 SpacesInParentheses: false
 IndentCaseLabels: true
-PointerAlignment: Left
+PointerAlignment: Right
 SortIncludes: true
+
+# Options spécifiques pour C
+AlignConsecutiveMacros: true
+AlignConsecutiveDeclarations: true
+AlignConsecutiveAssignments: true
+IndentGotoLabels: true
+SpaceAfterCStyleCast: true
